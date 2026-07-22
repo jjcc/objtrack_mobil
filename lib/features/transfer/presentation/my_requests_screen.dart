@@ -15,6 +15,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   List<dynamic> requests = const [];
   bool isLoading = true;
   String? error;
+  final Map<String, Map<String, String>> _nameMap = {};
 
   @override
   void initState() {
@@ -33,15 +34,44 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     try {
       final data = await SupabaseService.client
           .from('transfer_requests')
-          .select('*, objects(name), to_user:user_profiles!transfer_requests_to_user_id_fkey(first_name, last_name)')
+          .select('*, objects(name)')
           .eq('from_user_id', me.id)
           .order('created_at', ascending: false);
+      final ids = (data as List)
+          .map((e) => (e['to_user_id'] as String?)?.trim())
+          .whereType<String>()
+          .toSet()
+          .toList();
+      final Map<String, Map<String, String>> nameMap = {};
+      for (final id in ids) {
+        final profile = await SupabaseService.client
+            .from('user_profiles')
+            .select('first_name,last_name')
+            .eq('id', id)
+            .maybeSingle();
+        if (profile != null) {
+          nameMap[id] = Map<String, String>.from(profile);
+        }
+      }
       if (!mounted) return;
-      setState(() { requests = data; isLoading = false; });
+      setState(() {
+        requests = data;
+        _nameMap
+          ..clear()
+          ..addAll(nameMap);
+        isLoading = false;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() { error = e.toString(); isLoading = false; });
     }
+  }
+
+  String _toUserName(String? userId) {
+    if (userId == null) return '';
+    final m = _nameMap[userId] ?? const {};
+    final full = '${(m['first_name'] ?? '').trim()} ${(m['last_name'] ?? '').trim()}'.trim();
+    return full.isEmpty ? userId : full;
   }
 
   @override
@@ -49,19 +79,22 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('My Requests')),
       drawer: const AppDrawer(),
-      body: isLoading ? const LoadingIndicator() : error != null ? ErrorMessage(message: error!) : ListView.builder(
-        itemCount: requests.length,
-        itemBuilder: (context, index) {
-          final r = requests[index];
-          final object = r['objects'];
-          final toUser = r['to_user'];
-          return ListTile(
-            title: Text(object?['name'] ?? 'Object'),
-            subtitle: Text('To: ${(toUser?['first_name'] ?? '')} ${(toUser?['last_name'] ?? '')}'),
-            trailing: Chip(label: Text(r['status'] ?? 'pending')),
-          );
-        },
-      ),
+      body: isLoading
+          ? const LoadingIndicator()
+          : error != null
+              ? ErrorMessage(message: error!)
+              : ListView.builder(
+                  itemCount: requests.length,
+                  itemBuilder: (context, index) {
+                    final r = requests[index];
+                    final object = r['objects'];
+                    return ListTile(
+                      title: Text(object?['name'] ?? 'Object'),
+                      subtitle: Text('To: ${_toUserName(r['to_user_id'] as String?)}'),
+                      trailing: Chip(label: Text(r['status'] ?? 'pending')),
+                    );
+                  },
+                ),
     );
   }
 }
