@@ -1,31 +1,10 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 class NotificationRepository {
-  RealtimeChannel? _channel;
-
+  /// TODO: Wire up realtime notifications once the `notifications` table
+  /// exists in Supabase. For now this is a stub.
   void listenForNotifications({
     required String userId,
     required void Function(Map<String, dynamic> payload) onNotification,
-  }) {
-    _channel = Supabase.instance.client
-        .channel('notifications-$userId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            column: 'user_id',
-            type: PostgresChangeFilterType.eq,
-            value: userId,
-          ),
-          callback: (payload) {
-            onNotification(payload.newRecord);
-          },
-        )
-        .subscribe();
-  }
+  }) {}
 
-  void dispose() {
-    _channel?.unsubscribe();
-  }
+  void dispose() {}
 }

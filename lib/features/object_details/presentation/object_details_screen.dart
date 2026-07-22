@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:objtrack_mobil/core/supabase.dart';
+import 'package:objtrack_mobil/features/object_details/data/object_repository.dart';
 import 'package:objtrack_mobil/shared/widgets/loading_indicator.dart';
 import 'package:objtrack_mobil/shared/widgets/error_message.dart';
 import 'package:objtrack_mobil/shared/widgets/owner_badge.dart';
@@ -16,6 +16,7 @@ class ObjectDetailsScreen extends StatefulWidget {
 class _ObjectDetailsScreenState extends State<ObjectDetailsScreen> {
   Map<String, dynamic>? object;
   List<dynamic> events = const [];
+  Map<String, dynamic>? currentOwner;
   bool isLoading = true;
   String? error;
 
@@ -28,15 +29,12 @@ class _ObjectDetailsScreenState extends State<ObjectDetailsScreen> {
   Future<void> _load() async {
     setState(() { isLoading = true; error = null; });
     try {
-      final client = SupabaseService.client;
-      final obj = await client.from('objects').select('*, categories(name)').eq('id', widget.objectId).maybeSingle();
-      final eventList = await client.from('events').select('*, event_types(label), to:user_profiles!events_e_to_fkey(first_name, last_name)').eq('object_id', widget.objectId).order('created_at', ascending: false).limit(10);
+      final repo = ObjectRepository();
+      object = await repo.getObject(widget.objectId);
+      currentOwner = await repo.getCurrentOwner(widget.objectId);
+      events = await repo.getRecentEvents(widget.objectId);
       if (!mounted) return;
-      setState(() {
-        object = obj;
-        events = eventList;
-        isLoading = false;
-      });
+      setState(() { isLoading = false; });
     } catch (e) {
       if (!mounted) return;
       setState(() { error = e.toString(); isLoading = false; });
@@ -57,9 +55,8 @@ class _ObjectDetailsScreenState extends State<ObjectDetailsScreen> {
 
   Widget _buildBody() {
     if (object == null) return const Center(child: Text('Object not found'));
-    final latestEvent = events.isNotEmpty ? events.first : null;
-    final owner = latestEvent != null && latestEvent['to'] != null
-        ? '${latestEvent['to']['first_name'] ?? ''} ${latestEvent['to']['last_name'] ?? ''}'.trim()
+    final owner = currentOwner != null
+        ? '${currentOwner!['first_name'] ?? ''} ${currentOwner!['last_name'] ?? ''}'.trim()
         : 'Unassigned';
     return ListView(
       padding: const EdgeInsets.all(16),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:objtrack_mobil/core/supabase.dart';
 import 'package:objtrack_mobil/shared/widgets/app_drawer.dart';
 import 'package:objtrack_mobil/shared/widgets/loading_indicator.dart';
@@ -47,7 +48,11 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
 
   Future<void> _approve(int requestId) async {
     await SupabaseService.client.rpc('approve_transfer', params: {'p_request_id': requestId});
-    _load();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Transfer approved')),
+    );
+    context.go('/my_requests');
   }
 
   @override
