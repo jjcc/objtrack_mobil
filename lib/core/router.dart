@@ -23,14 +23,20 @@ final router = GoRouter(
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
     GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
     GoRoute(path: '/scan', builder: (_, __) => const ScannerScreen()),
-    GoRoute(path: '/scan_result/:id', builder: (context, state) {
-      final id = int.parse(state.pathParameters['id']!);
-      return ScanResultScreen(objectId: id);
-    }),
-    GoRoute(path: '/object/:id', builder: (context, state) {
-      final id = int.parse(state.pathParameters['id']!);
-      return ObjectDetailsScreen(objectId: id);
-    }),
+    GoRoute(
+      path: '/scan_result/:id',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return ScanResultScreen(objectId: id);
+      },
+    ),
+    GoRoute(
+      path: '/object/:id',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return ObjectDetailsScreen(objectId: id);
+      },
+    ),
     GoRoute(
       path: '/transfer_request/:id',
       builder: (context, state) {

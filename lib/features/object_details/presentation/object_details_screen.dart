@@ -16,7 +16,7 @@ class ObjectDetailsScreen extends StatefulWidget {
 class _ObjectDetailsScreenState extends State<ObjectDetailsScreen> {
   Map<String, dynamic>? object;
   List<dynamic> events = const [];
-  Map<String, dynamic>? currentOwner;
+  String? currentOwnerName;
   bool isLoading = true;
   String? error;
 
@@ -27,17 +27,25 @@ class _ObjectDetailsScreenState extends State<ObjectDetailsScreen> {
   }
 
   Future<void> _load() async {
-    setState(() { isLoading = true; error = null; });
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
     try {
       final repo = ObjectRepository();
       object = await repo.getObject(widget.objectId);
-      currentOwner = await repo.getCurrentOwner(widget.objectId);
+      currentOwnerName = await repo.getCurrentOwner(widget.objectId);
       events = await repo.getRecentEvents(widget.objectId);
       if (!mounted) return;
-      setState(() { isLoading = false; });
+      setState(() {
+        isLoading = false;
+      });
     } catch (e) {
       if (!mounted) return;
-      setState(() { error = e.toString(); isLoading = false; });
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
     }
   }
 
@@ -48,24 +56,28 @@ class _ObjectDetailsScreenState extends State<ObjectDetailsScreen> {
       body: isLoading
           ? const LoadingIndicator()
           : error != null
-              ? ErrorMessage(message: error!)
-              : _buildBody(),
+          ? ErrorMessage(message: error!)
+          : _buildBody(),
     );
   }
 
   Widget _buildBody() {
     if (object == null) return const Center(child: Text('Object not found'));
-    final owner = currentOwner != null
-        ? '${currentOwner!['first_name'] ?? ''} ${currentOwner!['last_name'] ?? ''}'.trim()
-        : 'Unassigned';
+    final owner = currentOwnerName ?? 'Unassigned';
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(object!['name'] ?? '', style: Theme.of(context).textTheme.headlineMedium),
+        Text(
+          object!['name'] ?? '',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
         const SizedBox(height: 8),
         if (object!['description'] != null) Text(object!['description']),
         const SizedBox(height: 16),
-        const Text('Current Owner', style: TextStyle(fontWeight: FontWeight.w600)),
+        const Text(
+          'Current Owner',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         OwnerBadge(name: owner.isEmpty ? 'Unassigned' : owner),
         const SizedBox(height: 16),
         FilledButton.icon(
@@ -74,11 +86,16 @@ class _ObjectDetailsScreenState extends State<ObjectDetailsScreen> {
           label: const Text('Request Transfer'),
         ),
         const SizedBox(height: 20),
-        const Text('Recent Events', style: TextStyle(fontWeight: FontWeight.w600)),
-        ...events.map((e) => ListTile(
-              title: Text(e['event_types']?['label'] ?? 'Event'),
-              subtitle: Text(e['created_at'] ?? ''),
-            )),
+        const Text(
+          'Recent Events',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        ...events.map(
+          (e) => ListTile(
+            title: Text(e['event_types']?['label'] ?? 'Event'),
+            subtitle: Text(e['created_at'] ?? ''),
+          ),
+        ),
       ],
     );
   }

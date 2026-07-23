@@ -13,11 +13,26 @@ class HomeScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          FilledCardWithIcon(icon: Icons.qr_code_scanner, title: 'Scan', subtitle: 'Scan barcode', onTap: () => context.go('/scan')),
+          FilledCardWithIcon(
+            icon: Icons.qr_code_scanner,
+            title: 'Scan',
+            subtitle: 'Scan barcode',
+            onTap: () => context.go('/scan'),
+          ),
           const SizedBox(height: 12),
-          FilledCardWithIcon(icon: Icons.checklist, title: 'My Requests', subtitle: 'Pending transfers', onTap: () => context.go('/my_requests')),
+          FilledCardWithIcon(
+            icon: Icons.checklist,
+            title: 'My Requests',
+            subtitle: 'Pending transfers',
+            onTap: () => context.go('/my_requests'),
+          ),
           const SizedBox(height: 12),
-          FilledCardWithIcon(icon: Icons.approval, title: 'Approvals', subtitle: 'Approve transfers', onTap: () => context.go('/approvals')),
+          FilledCardWithIcon(
+            icon: Icons.approval,
+            title: 'Approvals',
+            subtitle: 'Approve transfers',
+            onTap: () => context.go('/approvals'),
+          ),
         ],
       ),
     );
@@ -29,13 +44,23 @@ class FilledCardWithIcon extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
-  const FilledCardWithIcon({super.key, required this.icon, required this.title, required this.subtitle, required this.onTap});
+  const FilledCardWithIcon({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading: Icon(icon, size: 32, color: Theme.of(context).colorScheme.primary),
+        leading: Icon(
+          icon,
+          size: 32,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),

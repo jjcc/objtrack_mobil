@@ -27,21 +27,27 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
   }
 
   Future<void> _load() async {
-    setState(() { isLoading = true; error = null; });
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
     try {
       final repo = ObjectRepository();
       object = await repo.getObject(widget.objectId);
-      final owner = await repo.getCurrentOwner(widget.objectId);
+      final ownerName = await repo.getCurrentOwner(widget.objectId);
       final enriched = await repo.getEnrichedRecentEvents(widget.objectId);
       if (!mounted) return;
       setState(() {
         events = enriched;
-        currentOwnerName = owner?.values.join(' ').trim().isNotEmpty == true ? owner!.values.join(' ').trim() : null;
+        currentOwnerName = ownerName;
         isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() { error = e.toString(); isLoading = false; });
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
     }
   }
 
@@ -49,7 +55,11 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Object Details')),
-      body: isLoading ? const LoadingIndicator() : error != null ? ErrorMessage(message: error!) : _buildBody(),
+      body: isLoading
+          ? const LoadingIndicator()
+          : error != null
+          ? ErrorMessage(message: error!)
+          : _buildBody(),
     );
   }
 
@@ -59,19 +69,45 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(object!['name'] ?? '', style: Theme.of(context).textTheme.headlineMedium),
+        Text(
+          object!['name'] ?? '',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
         const SizedBox(height: 8),
         if (category != null) Chip(label: Text(category['name'] ?? '')),
-        if (object!['model'] != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text('Model: ${object!['model']}')),
-        if (object!['description'] != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(object!['description'])),
+        if (object!['model'] != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text('Model: ${object!['model']}'),
+          ),
+        if (object!['description'] != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(object!['description']),
+          ),
         const SizedBox(height: 16),
-        const Text('Current Owner', style: TextStyle(fontWeight: FontWeight.w600)),
+        const Text(
+          'Current Owner',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         OwnerBadge(name: currentOwnerName),
         const SizedBox(height: 16),
-        FilledButton.icon(onPressed: () => context.go('/transfer_request/${object!['id']}'), icon: const Icon(Icons.swap_horiz), label: const Text('Request Transfer')),
+        FilledButton.icon(
+          onPressed: () => context.go('/transfer_request/${object!['id']}'),
+          icon: const Icon(Icons.swap_horiz),
+          label: const Text('Request Transfer'),
+        ),
         const SizedBox(height: 20),
-        const Text('Recent Events', style: TextStyle(fontWeight: FontWeight.w600)),
-        ...events.map((e) => ListTile(title: Text(e['event_types']?['label'] ?? 'Event'), subtitle: Text((e['created_at'] ?? '').toString()))),
+        const Text(
+          'Recent Events',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        ...events.map(
+          (e) => ListTile(
+            title: Text(e['event_types']?['label'] ?? 'Event'),
+            subtitle: Text((e['created_at'] ?? '').toString()),
+          ),
+        ),
       ],
     );
   }
